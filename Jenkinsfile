@@ -1,0 +1,58 @@
+pipeline {
+
+    agent any
+
+    tools {
+        maven 'Maven'
+        jdk 'JDK21'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                
+                git branch: 'main', url: 'https://github.com/Epsilon0309/Library_Management_System.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                bat 'mvn clean compile'
+            }
+        }
+
+        stage('Run JUnit Tests') {
+            steps {
+                bat 'mvn test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarServer') {
+                    bat 'mvn clean verify sonar:sonar'
+                }
+            }
+        }
+
+        stage('Build with Maven') {
+            steps {
+                bat 'mvn clean package'
+            }
+        }
+
+        stage('Deploy to Tomcat') {
+            steps {
+                bat 'copy target\\*.war "C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\webapps\\"'
+            }
+        }
+
+        stage('Start Tomcat Server') {
+            steps {
+                bat '"C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1\\bin\\startup.bat"'
+            }
+        }
+
+    }
+}
